@@ -11,11 +11,22 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody rb;
     private Collider oldColl;
     public float jumpPower = 1000f;
-    
+
     public float rotSpeedActual = 0;
     [SerializeField]
     private float jumpDelay = 0.5f;
     private float jumpTimer = 0f;
+
+
+    private bool isOnGround;
+    private bool wasOnGround = true;
+    private float maxGroundDist = 50f;
+    public LayerMask whatIsGround;
+
+    public AudioSource skateSound;
+    public AudioSource landSounds;
+    public AudioClip[] landingSounds;
+    public AudioClip[] jumpSounds;
     // Start is called before the first frame update
     void Start()
     {
@@ -23,6 +34,44 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // Update is called once per frame
+    private void Update()
+    {
+        //This variable will hold the "normal" of the ground. Think of it as a line
+        //the points "up" from the surface of the ground
+        Vector3 groundNormal;
+
+        //Calculate a ray that points straight down from the ship
+        Ray ray = new Ray(transform.position, -transform.up);
+
+        //Declare a variable that will hold the result of a raycast
+        RaycastHit hitInfo;
+
+        //Determine if the ship is on the ground by Raycasting down and seeing if it hits 
+        //any collider on the whatIsGround layer
+        isOnGround = Physics.Raycast(ray, out hitInfo, 0.25f, whatIsGround);
+        if (isOnGround)
+        {
+            if (!wasOnGround)
+            {
+                landSounds.PlayOneShot(landingSounds[Random.Range(0, landingSounds.Length)]);
+                jumpTimer = 0f;
+            }
+            
+            skateSound.mute = false;
+            wasOnGround = true;
+        } else
+        {
+            if (wasOnGround)
+            {
+                landSounds.PlayOneShot(jumpSounds[Random.Range(0, jumpSounds.Length)]);
+            }
+            
+            skateSound.mute = true;
+            wasOnGround = false;
+        }
+
+        rotSpeedActual = rb.velocity.magnitude;
+    }
     void FixedUpdate()
     {
         float hor = Input.GetAxisRaw("Horizontal");
@@ -33,7 +82,7 @@ public class PlayerMovement : MonoBehaviour
 
         //transform.position += transform.right * turnspeed * hor * Time.fixedDeltaTime;
 
-        if (Input.GetKey(KeyCode.Space) && jumpTimer > jumpDelay)
+        if (Input.GetKey(KeyCode.Space) && jumpTimer > jumpDelay && isOnGround )
         {
             rb.AddForce(rb.transform.up * jumpPower * rb.mass);
             jumpTimer = 0;
@@ -67,7 +116,6 @@ public class PlayerMovement : MonoBehaviour
             {
                 angle += 360;
             }
-            rotSpeedActual = angle;
             //again we get the longAngle with all the extra spins
             float longAngle = angle;
             float anglePerSecond = longAngle / duration;
