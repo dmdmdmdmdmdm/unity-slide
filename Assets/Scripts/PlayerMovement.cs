@@ -23,13 +23,27 @@ public class PlayerMovement : MonoBehaviour
     private float maxGroundDist = 50f;
     public LayerMask whatIsGround;
 
+    public float backTeleAmount = 5f;
+    private float backTeleTimer = 0f;
+    public float backTeleDelay = 2f;
+    private float backTeleDelayTimer = 0f;
+    private bool backTeleFreeze = false;
+    private Vector3 backTelePos = new Vector3(0, 0, 0);
+    private Quaternion backTeleRot = Quaternion.identity;
+    private bool isOnDeathFloor;
+    public LayerMask whatIsDeathFloor;
+
     public AudioSource skateSound;
     public AudioSource landSounds;
     public AudioClip[] landingSounds;
     public AudioClip[] jumpSounds;
+
+    private Collider lastColl;
     // Start is called before the first frame update
     void Start()
     {
+        backTelePos = transform.position;
+        backTeleRot = transform.rotation;
         rb = GetComponent<Rigidbody>();
     }
 
@@ -44,11 +58,13 @@ public class PlayerMovement : MonoBehaviour
         Ray ray = new Ray(transform.position, -transform.up);
 
         //Declare a variable that will hold the result of a raycast
-        RaycastHit hitInfo;
+        RaycastHit hitInfoGround;
+        RaycastHit hitInfoDeathFloor;
 
         //Determine if the ship is on the ground by Raycasting down and seeing if it hits 
         //any collider on the whatIsGround layer
-        isOnGround = Physics.Raycast(ray, out hitInfo, 0.25f, whatIsGround);
+        isOnGround = Physics.Raycast(ray, out hitInfoGround, 0.25f, whatIsGround);
+        isOnDeathFloor = Physics.Raycast(ray, out hitInfoDeathFloor, 0.25f, whatIsDeathFloor);
         if (isOnGround)
         {
             if (!wasOnGround)
@@ -69,8 +85,38 @@ public class PlayerMovement : MonoBehaviour
             skateSound.mute = true;
             wasOnGround = false;
         }
+        if (isOnDeathFloor)
+        {
+            isOnDeathFloor = false;
+            transform.position = backTelePos;
+            transform.rotation = backTeleRot;
+            rb.velocity = 0 * transform.forward;
+            backTeleDelayTimer = 0f;
+            //backTeleFreeze = true;
+
+        }
+
+        if(backTeleTimer > backTeleAmount && isOnGround)
+        {
+            backTeleTimer = 0;
+            backTelePos = transform.position;
+            backTeleRot = transform.rotation;
+            
+        }
+        if(backTeleDelayTimer > backTeleDelay)
+        {
+            backTeleFreeze = false;
+        }
 
         rotSpeedActual = rb.velocity.magnitude;
+        if(backTeleTimer < backTeleAmount * 2)
+        {
+            backTeleTimer += Time.deltaTime;
+        }
+        if(backTeleDelayTimer < backTeleDelay * 2)
+        {
+            backTeleDelayTimer += Time.deltaTime;
+        }
     }
     void FixedUpdate()
     {
@@ -92,13 +138,21 @@ public class PlayerMovement : MonoBehaviour
             jumpTimer += Time.fixedDeltaTime;
         }
     }
-
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("Forcer"))
+        {
+            lastColl = other;
+        }
+    }
     private void OnTriggerStay(Collider collision)
     {
         if (collision.gameObject.CompareTag("Forcer"))
         {
-
-          rb.velocity += collision.transform.forward * speed * 1 * Time.fixedDeltaTime;
+            if (!backTeleFreeze)
+            {
+                rb.velocity += collision.transform.forward * speed * 1 * Time.fixedDeltaTime;
+            }
             //float rotAmount = transform.rotation.y - collision.transform.rotation.y;
 
 

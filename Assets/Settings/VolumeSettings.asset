@@ -15,7 +15,7 @@ MonoBehaviour:
   active: 0
   m_AdvancedMode: 0
   mode:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   meteringMode:
     m_OverrideState: 0
@@ -24,8 +24,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   fixedExposure:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 1.61
   compensation:
     m_OverrideState: 0
     m_Value: 0
@@ -144,7 +144,7 @@ MonoBehaviour:
   m_AdvancedMode: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 0.049
+    m_Value: 0.05
     min: 0
     max: 1
   scatter:
@@ -249,7 +249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a81bcacc415a1f743bfdf703afc52027, type: 3}
   m_Name: GradientSky
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   m_AdvancedMode: 0
   rotation:
     m_OverrideState: 0
@@ -320,7 +320,7 @@ MonoBehaviour:
   m_AdvancedMode: 0
   temperature:
     m_OverrideState: 1
-    m_Value: -2
+    m_Value: -3
     min: -100
     max: 100
   tint:
@@ -649,8 +649,8 @@ MonoBehaviour:
         - serializedVersion: 3
           time: 0.33418366
           value: 0.3783784
-          inSlope: 3.8846467
-          outSlope: 3.8846467
+          inSlope: 3.2141845
+          outSlope: 3.2141845
           tangentMode: 0
           weightedMode: 0
           inWeight: 0
@@ -821,7 +821,7 @@ MonoBehaviour:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-  m_SelectedCurve: 7
+  m_SelectedCurve: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -878,7 +878,7 @@ MonoBehaviour:
     m_Value: 2
   skyAmbientMode:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 1
   fogType:
     m_OverrideState: 1
     m_Value: 2
@@ -965,7 +965,7 @@ MonoBehaviour:
     max: 1
   mipFogNear:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 300
     min: 0
   mipFogFar:
     m_OverrideState: 1
@@ -1374,9 +1374,9 @@ MonoBehaviour:
   m_AdvancedMode: 0
   postExposure:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.1
   contrast:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 10
     min: -100
     max: 100
