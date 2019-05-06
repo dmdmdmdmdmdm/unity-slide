@@ -60,10 +60,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\BoardRoll.cs" />
-    <Compile Include="Assets\DrawBackground.cs" />
-    <Compile Include="Assets\ModelMoveTest.cs" />
+    <Compile Include="Assets\Scripts\BoardRoll.cs" />
     <Compile Include="Assets\Scripts\CameraFollow.cs" />
+    <Compile Include="Assets\Scripts\DrawBackground.cs" />
+    <Compile Include="Assets\Scripts\ModelMoveTest.cs" />
     <Compile Include="Assets\Scripts\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\SimpleCameraController.cs" />
     <Compile Include="Assets\Scripts\TestTextScript.cs" />

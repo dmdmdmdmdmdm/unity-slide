@@ -38,7 +38,7 @@ public class PlayerMovement : MonoBehaviour
     public AudioClip[] landingSounds;
     public AudioClip[] jumpSounds;
 
-    private Collider lastColl;
+    private Transform lastColl;
     // Start is called before the first frame update
     void Start()
     {
@@ -64,7 +64,7 @@ public class PlayerMovement : MonoBehaviour
         //Determine if the ship is on the ground by Raycasting down and seeing if it hits 
         //any collider on the whatIsGround layer
         isOnGround = Physics.Raycast(ray, out hitInfoGround, 0.25f, whatIsGround);
-        isOnDeathFloor = Physics.Raycast(ray, out hitInfoDeathFloor, 0.25f, whatIsDeathFloor);
+        isOnDeathFloor = Physics.Raycast(ray, out hitInfoDeathFloor, 0.15f, whatIsDeathFloor);
         if (isOnGround)
         {
             if (!wasOnGround)
@@ -72,16 +72,17 @@ public class PlayerMovement : MonoBehaviour
                 landSounds.PlayOneShot(landingSounds[Random.Range(0, landingSounds.Length)]);
                 jumpTimer = 0f;
             }
-            
+
             skateSound.mute = false;
             wasOnGround = true;
-        } else
+        }
+        else
         {
             if (wasOnGround)
             {
                 landSounds.PlayOneShot(jumpSounds[Random.Range(0, jumpSounds.Length)]);
             }
-            
+
             skateSound.mute = true;
             wasOnGround = false;
         }
@@ -96,90 +97,113 @@ public class PlayerMovement : MonoBehaviour
 
         }
 
-        if(backTeleTimer > backTeleAmount && isOnGround)
+        if (backTeleTimer > backTeleAmount && isOnGround)
         {
             backTeleTimer = 0;
             backTelePos = transform.position;
             backTeleRot = transform.rotation;
-            
+
         }
-        if(backTeleDelayTimer > backTeleDelay)
+        if (backTeleDelayTimer > backTeleDelay)
         {
             backTeleFreeze = false;
         }
 
-        rotSpeedActual = rb.velocity.magnitude;
-        if(backTeleTimer < backTeleAmount * 2)
+
+        if (backTeleTimer < backTeleAmount * 2)
         {
             backTeleTimer += Time.deltaTime;
         }
-        if(backTeleDelayTimer < backTeleDelay * 2)
+        if (backTeleDelayTimer < backTeleDelay * 2)
         {
             backTeleDelayTimer += Time.deltaTime;
         }
+
+        
     }
     void FixedUpdate()
     {
         float hor = Input.GetAxisRaw("Horizontal");
         float ver = Input.GetAxisRaw("Vertical");
-        
-        
+
+        if (lastColl != null)
+        {
+            Move(lastColl);
+        }
+
         rb.velocity += rb.transform.right * turnspeed * hor * Time.fixedDeltaTime;
 
         //transform.position += transform.right * turnspeed * hor * Time.fixedDeltaTime;
 
-        if (Input.GetKey(KeyCode.Space) && jumpTimer > jumpDelay && isOnGround )
+        if (Input.GetKey(KeyCode.Space) && jumpTimer > jumpDelay && isOnGround)
         {
             rb.AddForce(rb.transform.up * jumpPower * rb.mass);
             jumpTimer = 0;
         }
-        if(jumpTimer < jumpDelay * 2)
+        if (jumpTimer < jumpDelay * 2)
         {
             jumpTimer += Time.fixedDeltaTime;
         }
+        
     }
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Forcer"))
         {
-            lastColl = other;
+            lastColl = other.transform;
+            
         }
     }
     private void OnTriggerStay(Collider collision)
     {
-        if (collision.gameObject.CompareTag("Forcer"))
-        {
-            if (!backTeleFreeze)
-            {
-                rb.velocity += collision.transform.forward * speed * 1 * Time.fixedDeltaTime;
-            }
-            //float rotAmount = transform.rotation.y - collision.transform.rotation.y;
-
-
-            Vector3 axis;
-            float angle;
-            GetShortestAngleAxisBetween(transform.rotation, collision.transform.rotation, out axis, out angle);
-            
-            float duration = 1;
-           // Debug.Log(angle);
-            if(angle > 180 && angle < 360)
-            {
-                angle -= 360;
-            }
-            if (angle < -180 && angle > -360)
-            {
-                angle += 360;
-            }
-            //again we get the longAngle with all the extra spins
-            float longAngle = angle;
-            float anglePerSecond = longAngle / duration;
-            float magn = rb.velocity.magnitude;
-            transform.rotation *= Quaternion.AngleAxis(anglePerSecond *  Time.deltaTime, axis);
-
-
-        }
+        //if (collision.gameObject.CompareTag("Forcer"))
+        //{
+        //    if (lastColl == null)
+        //    {
+        //        lastColl = collision;
+        //    }
+        //    else if (lastColl.transform.forward != collision.transform.forward)
+        //    {
+        //        lastColl = collision;
+        //    }
+        //}
     }
 
+    private void Move(Transform collision)
+    {
+        Debug.DrawRay(collision.forward, collision.forward * 10, Color.red);
+       // Debug.Log("T: " + transform.rotation + " C: " + collision.rotation);
+       
+        Debug.DrawRay(rb.velocity, rb.velocity * rb.velocity.magnitude, Color.green);
+
+        if (!backTeleFreeze)
+        {
+            rb.velocity += collision.forward * speed * 1 * Time.fixedDeltaTime;
+        }
+        //float rotAmount = transform.rotation.y - collision.transform.rotation.y;
+
+
+        Vector3 axis;
+        float angle;
+        GetShortestAngleAxisBetween(transform.rotation, collision.rotation, out axis, out angle);
+        Debug.Log(axis);
+        float duration = 1;
+        // Debug.Log(angle);
+        if (angle > 180 && angle < 360)
+        {
+            angle -= 360;
+        }
+        if (angle < -180 && angle > -360)
+        {
+            angle += 360;
+        }
+        //again we get the longAngle with all the extra spins
+        float longAngle = angle;
+        float anglePerSecond = longAngle / duration;
+        float magn = rb.velocity.magnitude;
+        transform.rotation *= Quaternion.AngleAxis(anglePerSecond * 2 * Time.fixedDeltaTime, axis);
+        rotSpeedActual = angle;
+    }
 
     public static void GetShortestAngleAxisBetween(Quaternion a, Quaternion b, out Vector3 axis, out float angle)
     {
