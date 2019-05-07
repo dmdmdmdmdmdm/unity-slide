@@ -38,6 +38,8 @@ public class PlayerMovement : MonoBehaviour
     public AudioClip[] landingSounds;
     public AudioClip[] jumpSounds;
 
+    public ModelMoveTest mmt;
+
     private Transform lastColl;
     // Start is called before the first frame update
     void Start()
@@ -45,6 +47,7 @@ public class PlayerMovement : MonoBehaviour
         backTelePos = transform.position;
         backTeleRot = transform.rotation;
         rb = GetComponent<Rigidbody>();
+        mmt = GetComponentInChildren<ModelMoveTest>();
     }
 
     // Update is called once per frame
@@ -136,16 +139,22 @@ public class PlayerMovement : MonoBehaviour
         if (lastColl != null)
         {
             Move(lastColl);
+            rb.velocity += transform.right * turnspeed * hor;
         }
-
-        rb.velocity += rb.transform.right * turnspeed * hor ;
+        
+        
+       // rb.MovePosition(Vector3.Lerp(transform.position, transform.position + transform.right * turnspeed * hor, 0.5f));
 
         //transform.position += transform.right * turnspeed * hor * Time.fixedDeltaTime;
 
         if (Input.GetKey(KeyCode.Space) && jumpTimer > jumpDelay && isOnGround)
         {
-            //rb.AddForce(rb.transform.up * jumpPower * rb.mass);
-            rb.velocity = new Vector3(rb.velocity.x, jumpPower, rb.velocity.z);
+
+            var spdFW = transform.InverseTransformDirection(rb.velocity).z;
+            
+
+            rb.AddForce(rb.transform.up * jumpPower * spdFW, ForceMode.Impulse);
+           // rb.velocity = new Vector3(rb.velocity.x, jumpPower, rb.velocity.z);
 
             jumpTimer = 0;
         }
@@ -156,7 +165,15 @@ public class PlayerMovement : MonoBehaviour
         if (!isOnGround)
         {
             // apply extra gravity from multiplier:
-            float m_GravityMultiplier = 5f;
+            float m_GravityMultiplier;
+            if (rb.velocity.y > 0)
+            {
+                m_GravityMultiplier = 1;
+            } else
+            {
+                m_GravityMultiplier = 3;
+            }
+            ;
             Vector3 extraGravityForce = (Physics.gravity * m_GravityMultiplier) - Physics.gravity;
             rb.AddForce(extraGravityForce);
         }
@@ -201,6 +218,7 @@ public class PlayerMovement : MonoBehaviour
             }
             rb.velocity += collision.forward * speed * groundfactor;
             rb.velocity = Vector3.Lerp(rb.velocity, collision.transform.forward * rb.velocity.magnitude,  rotSpeed );
+            
         }
         //float rotAmount = transform.rotation.y - collision.transform.rotation.y;
 
@@ -238,12 +256,12 @@ public class PlayerMovement : MonoBehaviour
         transform.rotation = Quaternion.Lerp(transform.rotation, newRot, 0.05f);
 
 
-       // transform.rotation *= Quaternion.AngleAxis(anglePerSecond * 1 * Time.deltaTime, axis);
+       //  transform.rotation *= Quaternion.AngleAxis(anglePerSecond * 1 * Time.deltaTime, axis);
 
 
 
 
-        rotSpeedActual = rb.velocity.y;
+        rotSpeedActual = rb.velocity.magnitude;
     }
 
     public static void GetShortestAngleAxisBetween(Quaternion a, Quaternion b, out Vector3 axis, out float angle)

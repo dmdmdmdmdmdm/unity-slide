@@ -8,17 +8,20 @@ public class ModelMoveTest : MonoBehaviour
     private PlayerMovement pm;
     private float afterGroundDelay = 1f;
     private float afterGroundTimer = 0f;
+
+    public Transform tr;
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponentInParent<Rigidbody>();
         pm = GetComponentInParent<PlayerMovement>();
+        tr = transform;
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        tr = transform;
         transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(rb.velocity), Time.deltaTime * 10);
 
         //float scroll = Input.GetAxis("Mouse ScrollWheel");
