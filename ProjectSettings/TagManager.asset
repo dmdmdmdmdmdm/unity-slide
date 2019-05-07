@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Forcer
   - Square
+  - Triangle
   layers:
   - Default
   - TransparentFX

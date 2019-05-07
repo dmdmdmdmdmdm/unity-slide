@@ -7,7 +7,7 @@ public class PlayerMovement : MonoBehaviour
 
     public float speed = 5f;
     public float turnspeed = 2f;
-    public float rotSpeed = 2f;
+    public float rotSpeed = 0.5f;
     private Rigidbody rb;
     private Collider oldColl;
     public float jumpPower = 1000f;
@@ -119,7 +119,14 @@ public class PlayerMovement : MonoBehaviour
             backTeleDelayTimer += Time.deltaTime;
         }
 
-        
+        if (lastColl != null)
+        {
+            Rotate(lastColl);
+        }
+
+
+
+
     }
     void FixedUpdate()
     {
@@ -138,6 +145,7 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKey(KeyCode.Space) && jumpTimer > jumpDelay && isOnGround)
         {
             rb.AddForce(rb.transform.up * jumpPower * rb.mass);
+
             jumpTimer = 0;
         }
         if (jumpTimer < jumpDelay * 2)
@@ -172,17 +180,28 @@ public class PlayerMovement : MonoBehaviour
     private void Move(Transform collision)
     {
         Debug.DrawRay(collision.forward, collision.forward * 10, Color.red);
-       // Debug.Log("T: " + transform.rotation + " C: " + collision.rotation);
-       
+        // Debug.Log("T: " + transform.rotation + " C: " + collision.rotation);
+
         Debug.DrawRay(rb.velocity, rb.velocity * rb.velocity.magnitude, Color.green);
 
         if (!backTeleFreeze)
         {
-            rb.velocity += collision.forward * speed * 1 * Time.fixedDeltaTime;
+            float groundfactor = 1f;
+            if (!isOnGround)
+            {
+                groundfactor = 0.75f;
+            }
+            rb.velocity += collision.forward * speed * groundfactor * Time.fixedDeltaTime;
+            rb.velocity = Vector3.Lerp(rb.velocity, collision.transform.forward * rb.velocity.magnitude, Time.fixedDeltaTime * rotSpeed );
         }
         //float rotAmount = transform.rotation.y - collision.transform.rotation.y;
 
 
+        
+    }
+
+    private void Rotate(Transform collision)
+    {
         Vector3 axis;
         float angle;
         GetShortestAngleAxisBetween(transform.rotation, collision.rotation, out axis, out angle);
@@ -200,9 +219,23 @@ public class PlayerMovement : MonoBehaviour
         //again we get the longAngle with all the extra spins
         float longAngle = angle;
         float anglePerSecond = longAngle / duration;
-        float magn = rb.velocity.magnitude;
-        transform.rotation *= Quaternion.AngleAxis(anglePerSecond * 2 * Time.fixedDeltaTime, axis);
-        rotSpeedActual = angle;
+
+        float mag = rb.velocity.magnitude;
+
+        
+
+        
+        Quaternion newRot = transform.rotation * Quaternion.AngleAxis(anglePerSecond * 1, axis);
+
+        transform.rotation = Quaternion.Lerp(transform.rotation, newRot, Time.deltaTime * 5);
+
+
+       // transform.rotation *= Quaternion.AngleAxis(anglePerSecond * 1 * Time.deltaTime, axis);
+
+
+
+
+        rotSpeedActual = rb.velocity.y;
     }
 
     public static void GetShortestAngleAxisBetween(Quaternion a, Quaternion b, out Vector3 axis, out float angle)
@@ -240,5 +273,9 @@ public class PlayerMovement : MonoBehaviour
         q.y = (float)((double)q.y / mag);
         q.z = (float)((double)q.z / mag);
         return q;
+    }
+    public bool isGrounded()
+    {
+        return isOnGround;
     }
 }
