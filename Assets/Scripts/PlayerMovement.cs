@@ -138,13 +138,14 @@ public class PlayerMovement : MonoBehaviour
             Move(lastColl);
         }
 
-        rb.velocity += rb.transform.right * turnspeed * hor * Time.fixedDeltaTime;
+        rb.velocity += rb.transform.right * turnspeed * hor ;
 
         //transform.position += transform.right * turnspeed * hor * Time.fixedDeltaTime;
 
         if (Input.GetKey(KeyCode.Space) && jumpTimer > jumpDelay && isOnGround)
         {
-            rb.AddForce(rb.transform.up * jumpPower * rb.mass);
+            //rb.AddForce(rb.transform.up * jumpPower * rb.mass);
+            rb.velocity = new Vector3(rb.velocity.x, jumpPower, rb.velocity.z);
 
             jumpTimer = 0;
         }
@@ -152,7 +153,14 @@ public class PlayerMovement : MonoBehaviour
         {
             jumpTimer += Time.fixedDeltaTime;
         }
-        
+        if (!isOnGround)
+        {
+            // apply extra gravity from multiplier:
+            float m_GravityMultiplier = 5f;
+            Vector3 extraGravityForce = (Physics.gravity * m_GravityMultiplier) - Physics.gravity;
+            rb.AddForce(extraGravityForce);
+        }
+
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -191,8 +199,8 @@ public class PlayerMovement : MonoBehaviour
             {
                 groundfactor = 0.75f;
             }
-            rb.velocity += collision.forward * speed * groundfactor * Time.fixedDeltaTime;
-            rb.velocity = Vector3.Lerp(rb.velocity, collision.transform.forward * rb.velocity.magnitude, Time.fixedDeltaTime * rotSpeed );
+            rb.velocity += collision.forward * speed * groundfactor;
+            rb.velocity = Vector3.Lerp(rb.velocity, collision.transform.forward * rb.velocity.magnitude,  rotSpeed );
         }
         //float rotAmount = transform.rotation.y - collision.transform.rotation.y;
 
@@ -227,7 +235,7 @@ public class PlayerMovement : MonoBehaviour
         
         Quaternion newRot = transform.rotation * Quaternion.AngleAxis(anglePerSecond * 1, axis);
 
-        transform.rotation = Quaternion.Lerp(transform.rotation, newRot, Time.deltaTime * 5);
+        transform.rotation = Quaternion.Lerp(transform.rotation, newRot, 0.05f);
 
 
        // transform.rotation *= Quaternion.AngleAxis(anglePerSecond * 1 * Time.deltaTime, axis);
