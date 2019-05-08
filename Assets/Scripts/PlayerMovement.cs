@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
 
+
     public float speed = 5f;
     public float turnspeed = 2f;
     public float rotSpeed = 0.5f;
@@ -37,6 +38,11 @@ public class PlayerMovement : MonoBehaviour
     public AudioSource landSounds;
     public AudioClip[] landingSounds;
     public AudioClip[] jumpSounds;
+    public AudioClip[] slideSounds;
+    private float slideSoundDelay = 0.5f;
+    private float slideSoundTimer = 0f;
+
+    private Transform newTrans;
 
     public ModelMoveTest mmt;
 
@@ -66,7 +72,7 @@ public class PlayerMovement : MonoBehaviour
 
         //Determine if the ship is on the ground by Raycasting down and seeing if it hits 
         //any collider on the whatIsGround layer
-        isOnGround = Physics.Raycast(ray, out hitInfoGround, 0.25f, whatIsGround);
+        isOnGround = Physics.Raycast(ray, out hitInfoGround, 0.35f, whatIsGround);
         isOnDeathFloor = Physics.Raycast(ray, out hitInfoDeathFloor, 0.15f, whatIsDeathFloor);
         if (isOnGround)
         {
@@ -121,6 +127,9 @@ public class PlayerMovement : MonoBehaviour
         {
             backTeleDelayTimer += Time.deltaTime;
         }
+        if(slideSoundTimer < slideSoundDelay * 2){
+            slideSoundTimer += Time.deltaTime;
+        }
 
         if (lastColl != null)
         {
@@ -171,7 +180,7 @@ public class PlayerMovement : MonoBehaviour
                 m_GravityMultiplier = 1;
             } else
             {
-                m_GravityMultiplier = 3;
+                m_GravityMultiplier = 5;
             }
             ;
             Vector3 extraGravityForce = (Physics.gravity * m_GravityMultiplier) - Physics.gravity;
@@ -181,25 +190,37 @@ public class PlayerMovement : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Forcer"))
+        if (other.gameObject.CompareTag("Forcer") && isOnGround)
         {
             lastColl = other.transform;
             
         }
     }
+    private void OnTriggerExit(Collider other)
+    {
+        if (!isOnGround)
+        {
+            newTrans = transform;
+            newTrans.eulerAngles = new Vector3(0, transform.eulerAngles.y, transform.eulerAngles.z);
+            lastColl = newTrans;
+        } else
+        {
+            lastColl = transform;
+        }
+    }
     private void OnTriggerStay(Collider collision)
     {
-        //if (collision.gameObject.CompareTag("Forcer"))
-        //{
-        //    if (lastColl == null)
-        //    {
-        //        lastColl = collision;
-        //    }
-        //    else if (lastColl.transform.forward != collision.transform.forward)
-        //    {
-        //        lastColl = collision;
-        //    }
-        //}
+        if (collision.gameObject.CompareTag("Forcer") && isOnGround)
+        {
+            if (lastColl == null)
+            {
+                lastColl = collision.transform;
+            }
+            else if (lastColl.transform.forward != collision.transform.forward)
+            {
+                lastColl = collision.transform;
+            }
+        }
     }
 
     private void Move(Transform collision)
@@ -216,7 +237,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 groundfactor = 0.75f;
             }
-            rb.velocity += collision.forward * speed * groundfactor;
+            rb.velocity += transform.forward * speed * groundfactor;
             rb.velocity = Vector3.Lerp(rb.velocity, collision.transform.forward * rb.velocity.magnitude,  rotSpeed );
             
         }
@@ -248,6 +269,11 @@ public class PlayerMovement : MonoBehaviour
 
         float mag = rb.velocity.magnitude;
 
+        if(Mathf.Abs(angle) > 30 && slideSoundTimer > slideSoundDelay && isOnGround)
+        {
+            landSounds.PlayOneShot(slideSounds[Random.Range(0, slideSounds.Length)],0.5f);
+            slideSoundTimer = 0f;
+        }
         
 
         
@@ -261,7 +287,7 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-        rotSpeedActual = rb.velocity.magnitude;
+        rotSpeedActual = angle;
     }
 
     public static void GetShortestAngleAxisBetween(Quaternion a, Quaternion b, out Vector3 axis, out float angle)
