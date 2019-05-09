@@ -42,6 +42,11 @@ public class PlayerMovement : MonoBehaviour
     private float slideSoundDelay = 0.5f;
     private float slideSoundTimer = 0f;
 
+    private bool inForcer = false;
+    private float exitForcerDelay = 0.05f;
+    private float exitForcerTimer = 0;
+    private bool exitForcer = false;
+
     private Transform newTrans;
 
     public ModelMoveTest mmt;
@@ -130,6 +135,25 @@ public class PlayerMovement : MonoBehaviour
         if(slideSoundTimer < slideSoundDelay * 2){
             slideSoundTimer += Time.deltaTime;
         }
+        if (exitForcerTimer < exitForcerDelay * 2 && exitForcer)
+        {
+            exitForcerTimer += Time.deltaTime;
+        }
+        if(exitForcerTimer > exitForcerDelay && exitForcer)
+        {
+            exitForcerTimer = 0f;
+            if (!isOnGround)
+            {
+                newTrans = transform;
+                newTrans.eulerAngles = new Vector3(0, transform.eulerAngles.y, transform.eulerAngles.z);
+                lastColl = newTrans;
+            }
+            else
+            {
+                lastColl = transform;
+            }
+            exitForcer = false;
+        }
 
         if (lastColl != null)
         {
@@ -190,26 +214,29 @@ public class PlayerMovement : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Forcer") && isOnGround)
+        if (other.gameObject.CompareTag("Forcer") /*&& isOnGround*/)
         {
             lastColl = other.transform;
             
         }
+        exitForcer = false;
     }
     private void OnTriggerExit(Collider other)
     {
-        if (!isOnGround)
+        exitForcer = true;
+        if (inForcer)
         {
-            newTrans = transform;
-            newTrans.eulerAngles = new Vector3(0, transform.eulerAngles.y, transform.eulerAngles.z);
-            lastColl = newTrans;
-        } else
-        {
-            lastColl = transform;
+
         }
+        else
+        {
+           
+        }
+
     }
     private void OnTriggerStay(Collider collision)
     {
+        exitForcer = false;
         if (collision.gameObject.CompareTag("Forcer") && isOnGround)
         {
             if (lastColl == null)
@@ -287,7 +314,7 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-        rotSpeedActual = angle;
+        rotSpeedActual = exitForcerTimer;
     }
 
     public static void GetShortestAngleAxisBetween(Quaternion a, Quaternion b, out Vector3 axis, out float angle)
